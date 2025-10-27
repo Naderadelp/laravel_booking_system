@@ -3,6 +3,7 @@
 namespace App\Bookings;
 
 use App\Models\Employee;
+use App\Models\ScheduleExclusion;
 use App\Models\Service;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -25,46 +26,25 @@ class ScheduleAvailability
     $this->services = $services;
   }
 
-  public function forPeriod(Carbon $startAt, Carbon $endAt){
-    collect(CarbonPeriod::create($startAt , $endAt)->days())
-            ->each(function($day)  {
-                $this->addAvailabilityFromSchedule($day);
-            });
+  public function forPeriod(Carbon $startAt, Carbon $endAt)
+  {
+      collect(CarbonPeriod::create($startAt , $endAt)->days())
+              ->each(function($day)  {
+                  $this->addAvailabilityFromSchedule($day);
 
-            dd($this->periods);
+                  $this->employee->scheduleExclusions()->each(function(ScheduleExclusion $exclusion){
+                    $this->subtractScheduleExclusion($exclusion);
+                  });
+              });
 
+              $this->excludeTinePassedToday();
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      // $this->periods = $this->periods->add(
-      //   Period::make(
-      //     now()->startOfDay(),
-      //     now()->addDay()->endOfDay(),
-      //     Precision::MINUTE(),
-      //     Boundaries::EXCLUDE_START()
-      //     ));
-      // $this->periods = $this->periods->subtract(
-      //   Period::make(
-      //     Carbon::createFromTimeString('1:00:00'),
-      //     Carbon::createFromTimeString('1:30:00'),
-      //     Precision::MINUTE(),
-      //     Boundaries::EXCLUDE_END()
-      //   )
-      //   );
+              foreach($this->periods as $period){
+                  dump($period->asString());
+                  dump($period->start()->format('l'));
+                  dump($period->end()->format('l'));
+                  dump('===============================================');
+              }
   }
 
   protected function  addAvailabilityFromSchedule(Carbon $day)
@@ -89,6 +69,29 @@ class ScheduleAvailability
           Precision::MINUTE(),
         )
       );
+  }
+
+  protected function subtractScheduleExclusion(ScheduleExclusion $exclusion){
+    $this->periods = $this->periods->subtract(
+      Period::make(
+        $exclusion->start_at,
+        $exclusion->ends_at,
+        Precision::MINUTE(),
+        Boundaries::EXCLUDE_END(),
+      )
+      );
+  }
+
+  protected function excludeTinePassedToday()
+  {
+    $this->periods = $this->periods->subtract(
+      Period::make(
+        now()->startOfDay(),
+        now()->endOfHour(),
+        Precision::MINUTE(),
+        Boundaries::EXCLUDE_START(),
+      )
+    );
   }
 
 }

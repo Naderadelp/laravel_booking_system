@@ -4,6 +4,9 @@ use App\Models\Employee;
 use Illuminate\Support\Facades\Route;
 use App\Bookings\ScheduleAvailability;
 use App\Models\Service;
+use Carbon\Carbon;
+
+// Carbon::setTestNow(now()->setTimeFromTimeString('12:00'));
 
 Route::get('/', function ()
     {
