@@ -20,4 +20,6 @@ Route::get('/', function ()
                 now()->addMonth()->endOfDay()
             );
     }
+
+    
 );

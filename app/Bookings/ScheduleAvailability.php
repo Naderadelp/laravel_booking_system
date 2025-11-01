@@ -32,12 +32,13 @@ class ScheduleAvailability
               ->each(function($day)  {
                   $this->addAvailabilityFromSchedule($day);
 
-                  $this->employee->scheduleExclusions()->each(function(ScheduleExclusion $exclusion){
+                  $this->employee->scheduleExclusions()->each(function(ScheduleExclusion $exclusion)
+                  {
                     $this->subtractScheduleExclusion($exclusion);
                   });
               });
 
-              $this->excludeTinePassedToday();
+              // $this->excludeTimePassedToday();
 
               foreach($this->periods as $period){
                   dump($period->asString());
@@ -56,9 +57,10 @@ class ScheduleAvailability
         return;
       }
 
-      $workinhHourrs = [$startAt, $endAt] = $schedule->getWorkingHours($day);
+      $workingHours = [$startAt, $endAt] = $schedule->getWorkingHours($day);
 
-      if(!$workinhHourrs){
+      if(!$workingHours)
+      {
         return;
       }
 
@@ -82,7 +84,7 @@ class ScheduleAvailability
       );
   }
 
-  protected function excludeTinePassedToday()
+  protected function excludeTimePassedToday()
   {
     $this->periods = $this->periods->subtract(
       Period::make(
